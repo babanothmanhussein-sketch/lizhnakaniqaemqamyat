@@ -8,6 +8,7 @@ let messages = [];
 let autoNumber = 1;
 let isOnline = navigator.onLine;
 let syncInterval = null;
+let lastSyncTime = 0;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -18,6 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setupOnlineStatusListener();
     updateClock();
     setInterval(updateClock, 1000);
+    // Force sync every 3 seconds for better real-time
+    setInterval(forceSync, 3000);
 });
 
 // Clock Function
@@ -34,6 +37,41 @@ function updateClock() {
     const clockElement = document.getElementById('clock');
     if (clockElement) {
         clockElement.textContent = timeString;
+    }
+}
+
+// Force sync function
+function forceSync() {
+    if (isOnline) {
+        syncData();
+        // Also check for new data from other devices
+        checkForNewData();
+    }
+}
+
+// Check for new data from other devices
+function checkForNewData() {
+    try {
+        const currentDataRecords = JSON.parse(localStorage.getItem('dataRecords') || '[]');
+        const currentUsers = JSON.parse(localStorage.getItem('users') || '[]');
+        
+        // Check if data has changed
+        if (JSON.stringify(currentDataRecords) !== JSON.stringify(dataRecords)) {
+            dataRecords = currentDataRecords;
+            if (currentRole === 'admin') {
+                loadData();
+                showMessage('زانیاری نوێ لە دیڤایسەکانی تر وەرگیرا', 'info');
+            }
+        }
+        
+        if (JSON.stringify(currentUsers) !== JSON.stringify(users)) {
+            users = currentUsers;
+            if (currentRole === 'admin') {
+                loadUsers();
+            }
+        }
+    } catch (e) {
+        console.error('Check data error:', e);
     }
 }
 
@@ -80,10 +118,21 @@ function syncData() {
             if (currentRole === 'admin') {
                 loadUsers();
                 loadData();
+                
+                // Show notification for new records
+                const newRecords = dataRecords.filter(r => 
+                    r.timestamp && new Date(r.timestamp).getTime() > lastSyncTime
+                );
+                
+                if (newRecords.length > 0) {
+                    showMessage(`${newRecords.length} تۆماری نوێ لە ${newRecords[0].userCommitteeName} وەرگیرا`, 'success');
+                }
             } else {
                 loadUserData();
             }
         }
+        
+        lastSyncTime = Date.now();
     } catch (e) {
         console.error('Sync error:', e);
     }
@@ -493,20 +542,34 @@ function handleDataEntry(e) {
         date: new Date().toISOString().split('T')[0],
         userId: currentUser.id,
         userCommitteeName: currentUser.committeeName,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        deviceId: generateDeviceId()
     };
     
     dataRecords.push(newRecord);
     localStorage.setItem('dataRecords', JSON.stringify(dataRecords));
     
-    // Sync immediately for real-time update
-    syncData();
+    // Force immediate sync
+    forceSync();
+    
+    // Add timestamp for tracking
+    lastSyncTime = Date.now();
     
     document.getElementById('dataEntryForm').reset();
     document.getElementById('committeeName').value = currentUser.committeeName;
     
     showMessage('زانیاری بەسەرکەوتوویی تۆمارکرا - ئەدمین ڕاستەوخۆ دەیبینێت', 'success');
     updateUserStats();
+}
+
+// Generate device ID for tracking
+function generateDeviceId() {
+    let deviceId = localStorage.getItem('deviceId');
+    if (!deviceId) {
+        deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        localStorage.setItem('deviceId', deviceId);
+    }
+    return deviceId;
 }
 
 function loadUserData() {
