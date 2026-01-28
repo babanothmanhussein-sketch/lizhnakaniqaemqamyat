@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستمی بەڕێوەبردنی لیژنەکانی قائیمقامیەت</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Page -->
+        <div id="loginPage" class="page active">
+            <div class="login-container">
+                <div class="login-header">
+                    <h1>سیستمی بەڕێوەبردنی لیژنەکانی قائیمقامیەت</h1>
+                    <p>بەنوێنەرایەتی کارمەندو ئەفسەرانی بەڕێوەبەرایەتی ئاسایشی پارێزگای سلێمانی</p>
+                </div>
+                
+                <div class="login-form">
+                    <div class="login-tabs">
+                        <button class="tab-btn active" onclick="switchLoginTab('admin')">ئەدمین</button>
+                        <button class="tab-btn" onclick="switchLoginTab('user')">یوزەر</button>
+                    </div>
+                    
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="loginInput">ئیمەیڵ / ژمارە مۆبایل</label>
+                            <input type="text" id="loginInput" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">پاسۆرد</label>
+                            <input type="password" id="password" required>
+                        </div>
+                        
+                        <button type="submit" class="login-btn">
+                            <i class="fas fa-sign-in-alt"></i> چوونەژوورەوە
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminPage" class="page">
+            <div class="dashboard-header">
+                <div class="header-right">
+                    <h2>تۆماری زانیاری لیژنەکانی قائیمقامیەتی قەزای مەڵبەندی سلێمانی</h2>
+                    <div class="stats">
+                        <span class="stat-item">
+                            <i class="fas fa-file-alt"></i>
+                            <span id="totalReceipts">0</span> پسوڵەی ئاگاداری
+                        </span>
+                        <span class="stat-item">
+                            <i class="fas fa-users"></i>
+                            <span id="totalAttendance">0</span> پسوڵەی ئامادەبوون
+                        </span>
+                        <span class="stat-item">
+                            <i class="fas fa-lock"></i>
+                            <span id="totalClosing">0</span> پسوڵەی داخستن
+                        </span>
+                    </div>
+                </div>
+                <div class="header-left">
+                    <span id="adminCommitteeName" class="committee-name"></span>
+                    <button onclick="logout()" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> دەرچوون
+                    </button>
+                </div>
+            </div>
+
+            <div class="admin-content">
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="switchAdminTab('users')">بەڕێوەبردنی یوزەرەکان</button>
+                    <button class="tab-btn" onclick="switchAdminTab('data')">تۆماری زانیاری</button>
+                    <button class="tab-btn" onclick="switchAdminTab('reports')">ڕاپۆرتەکان</button>
+                    <button class="tab-btn" onclick="switchAdminTab('messages')">پەیامەکان</button>
+                </div>
+
+                <!-- Users Management -->
+                <div id="usersTab" class="tab-content active">
+                    <div class="section-header">
+                        <h3>بەڕێوەبردنی یوزەرەکان</h3>
+                        <button onclick="openUserModal()" class="add-btn">
+                            <i class="fas fa-plus"></i> زیادکردنی یوزەری نوێ
+                        </button>
+                    </div>
+                    
+                    <div class="search-section">
+                        <input type="text" id="userSearch" placeholder="گەڕان بەناوی لیژنە..." onkeyup="searchUsers()">
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ناوی یوزەر</th>
+                                    <th>ناوی لیژنە</th>
+                                    <th>ئیمەیڵ</th>
+                                    <th>ژمارە مۆبایل</th>
+                                    <th>لۆکەیشن</th>
+                                    <th>چالاکی</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Data Records -->
+                <div id="dataTab" class="tab-content">
+                    <div class="section-header">
+                        <h3>تۆماری زانیاری</h3>
+                        <div class="date-range">
+                            <input type="date" id="startDate">
+                            <span>تا</span>
+                            <input type="date" id="endDate">
+                            <button onclick="searchByDateRange()" class="search-btn">
+                                <i class="fas fa-search"></i> گەڕان
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="search-section">
+                        <input type="text" id="dataSearch" placeholder="گەڕان بەناوی لیژنە، ژمارە پسوڵە، یان ژمارە مۆبایل..." onkeyup="searchData()">
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th>ژمارە</th>
+                                    <th>ناوی لیژنە</th>
+                                    <th>ناوی خاوەن کار</th>
+                                    <th>ناونیشان</th>
+                                    <th>ناوی شوێن</th>
+                                    <th>جۆری ڕاپۆرت</th>
+                                    <th>ژمارەی مۆڵەت</th>
+                                    <th>جۆری مۆڵەت</th>
+                                    <th>ژمارە مۆبایل</th>
+                                    <th>بەروار</th>
+                                    <th>سەرپێچییەکان</th>
+                                    <th>چالاکی</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Reports -->
+                <div id="reportsTab" class="tab-content">
+                    <div class="section-header">
+                        <h3>ڕاپۆرتەکان</h3>
+                        <button onclick="generateReport()" class="report-btn">
+                            <i class="fas fa-file-pdf"></i> دروستکردنی ڕاپۆرت
+                        </button>
+                    </div>
+                    <div id="reportContent"></div>
+                </div>
+
+                <!-- Messages -->
+                <div id="messagesTab" class="tab-content">
+                    <div class="section-header">
+                        <h3>پەیامەکان</h3>
+                        <button onclick="openMessageModal()" class="add-btn">
+                            <i class="fas fa-plus"></i> ناردنی پەیامی نوێ
+                        </button>
+                    </div>
+                    <div id="messagesList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="userPage" class="page">
+            <div class="dashboard-header">
+                <div class="header-right">
+                    <h2>تۆماری زانیاری لیژنەکانی قائیمقامیەتی قەزای مەڵبەندی سلێمانی</h2>
+                    <div class="stats">
+                        <span class="stat-item">
+                            <i class="fas fa-file-alt"></i>
+                            <span id="userTotalReceipts">0</span> پسوڵەی ئاگاداری
+                        </span>
+                        <span class="stat-item">
+                            <i class="fas fa-users"></i>
+                            <span id="userTotalAttendance">0</span> پسوڵەی ئامادەبوون
+                        </span>
+                        <span class="stat-item">
+                            <i class="fas fa-lock"></i>
+                            <span id="userTotalClosing">0</span> پسوڵەی داخستن
+                        </span>
+                    </div>
+                </div>
+                <div class="header-left">
+                    <span id="userCommitteeName" class="committee-name"></span>
+                    <button onclick="logout()" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> دەرچوون
+                    </button>
+                </div>
+            </div>
+
+            <div class="user-content">
+                <div class="user-tabs">
+                    <button class="tab-btn active" onclick="switchUserTab('entry')">تۆمارکردنی زانیاری</button>
+                    <button class="tab-btn" onclick="switchUserTab('view')">بینینی زانیاری</button>
+                    <button class="tab-btn" onclick="switchUserTab('search')">گەڕان</button>
+                </div>
+
+                <!-- Data Entry -->
+                <div id="entryTab" class="tab-content active">
+                    <div class="form-container">
+                        <h3>تۆمارکردنی زانیاری نوێ</h3>
+                        <form id="dataEntryForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="committeeName">ناوی لیژنە</label>
+                                    <input type="text" id="committeeName" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ownerName">ناوی خاوەن کار</label>
+                                    <input type="text" id="ownerName" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="address">ناونیشان</label>
+                                    <div class="address-inputs">
+                                        <input type="text" id="address1" placeholder="ناونیشانی ١" required>
+                                        <button type="button" onclick="addAddressField()" class="add-field-btn">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="placeName">ناوی شوێن</label>
+                                    <input type="text" id="placeName" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="reportType">جۆری ڕاپۆرت</label>
+                                    <div class="checkbox-group">
+                                        <label><input type="checkbox" name="reportType" value="ئاگاداری"> ئاگاداری</label>
+                                        <label><input type="checkbox" name="reportType" value="ئامادەبوون"> ئامادەبوون</label>
+                                        <label><input type="checkbox" name="reportType" value="داخستن"> داخستن</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="permitNumber">ژمارەی مۆڵەت</label>
+                                    <input type="text" id="permitNumber" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="permitType">جۆری مۆڵەت</label>
+                                    <div class="checkbox-group">
+                                        <label><input type="checkbox" name="permitType" value="مۆڵەتی تەندروستی"> مۆڵەتی تەندروستی</label>
+                                        <label><input type="checkbox" name="permitType" value="مۆڵەتی گەشت وگوزار"> مۆڵەتی گەشت وگوزار</label>
+                                        <label><input type="checkbox" name="permitType" value="مۆڵەتی قائیمقامیەت"> مۆڵەتی قائیمقامیەت</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mobileNumbers">ژمارە مۆبایل</label>
+                                    <div class="mobile-inputs">
+                                        <input type="tel" id="mobile1" placeholder="ژمارە مۆبایل ١" required>
+                                        <button type="button" onclick="addMobileField()" class="add-field-btn">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label for="notes">سەرپێچییەکان</label>
+                                    <div class="notes-inputs">
+                                        <div class="note-item">
+                                            <span class="note-number">1-</span>
+                                            <input type="text" id="note1" placeholder="سەرپێچی ١">
+                                        </div>
+                                        <button type="button" onclick="addNoteField()" class="add-field-btn">
+                                            <i class="fas fa-plus"></i> زیادکردنی سەرپێچی
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="submit-btn">
+                                    <i class="fas fa-save"></i> تۆمارکردن
+                                </button>
+                                <button type="reset" class="reset-btn">
+                                    <i class="fas fa-undo"></i> ڕیسێت کردن
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- View Data -->
+                <div id="viewTab" class="tab-content">
+                    <div class="table-container">
+                        <table id="userDataTable">
+                            <thead>
+                                <tr>
+                                    <th>ژمارە</th>
+                                    <th>ناوی خاوەن کار</th>
+                                    <th>ناونیشان</th>
+                                    <th>ناوی شوێن</th>
+                                    <th>جۆری ڕاپۆرت</th>
+                                    <th>ژمارەی مۆڵەت</th>
+                                    <th>جۆری مۆڵەت</th>
+                                    <th>ژمارە مۆبایل</th>
+                                    <th>بەروار</th>
+                                    <th>سەرپێچییەکان</th>
+                                    <th>چالاکی</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div id="searchTab" class="tab-content">
+                    <div class="search-container">
+                        <div class="search-methods">
+                            <div class="search-method">
+                                <label>گەڕان بە ژمارە پسوڵە</label>
+                                <input type="text" id="searchByReceipt" placeholder="ژمارە پسوڵە بنووسە">
+                                <button onclick="searchByReceiptNumber()" class="search-btn">
+                                    <i class="fas fa-search"></i> گەڕان
+                                </button>
+                            </div>
+                            
+                            <div class="search-method">
+                                <label>گەڕان بە ناو</label>
+                                <input type="text" id="searchByName" placeholder="ناو بنووسە">
+                                <button onclick="searchByOwnerName()" class="search-btn">
+                                    <i class="fas fa-search"></i> گەڕان
+                                </button>
+                            </div>
+                            
+                            <div class="search-method">
+                                <label>گەڕان بە ژمارە مۆبایل</label>
+                                <input type="text" id="searchByMobile" placeholder="ژمارە مۆبایل بنووسە">
+                                <button onclick="searchByMobileNumber()" class="search-btn">
+                                    <i class="fas fa-search"></i> گەڕان
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="searchResults" class="search-results"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>زیادکردنی یوزەری نوێ</h3>
+                <span class="close" onclick="closeUserModal()">&times;</span>
+            </div>
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="newUsername">ناوی یوزەر</label>
+                    <input type="text" id="newUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">پاسۆرد</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="committeeNameSelect">ناوی لیژنە</label>
+                    <input type="text" id="committeeNameSelect" required>
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">ئیمەیڵ</label>
+                    <input type="email" id="userEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="userMobile">ژمارە مۆبایل</label>
+                    <input type="tel" id="userMobile" required>
+                </div>
+                <div class="form-group">
+                    <label for="userLocation">لۆکەیشن</label>
+                    <input type="text" id="userLocation" placeholder="نمونە: 353333,456666">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">زیادکردن</button>
+                    <button type="button" onclick="closeUserModal()" class="cancel-btn">ڕەتکردنەوە</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ناردنی پەیام</h3>
+                <span class="close" onclick="closeMessageModal()">&times;</span>
+            </div>
+            <form id="messageForm">
+                <div class="form-group">
+                    <label>بۆ یوزەرەکان</label>
+                    <div class="checkbox-group" id="userCheckboxes"></div>
+                </div>
+                <div class="form-group">
+                    <label for="messageTitle">سەردێڕی پەیام</label>
+                    <input type="text" id="messageTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="messageContent">ناوەڕۆکی پەیام</label>
+                    <textarea id="messageContent" rows="5" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">ناردن</button>
+                    <button type="button" onclick="closeMessageModal()" class="cancel-btn">ڕەتکردنەوە</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
