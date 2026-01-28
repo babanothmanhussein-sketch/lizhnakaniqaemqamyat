@@ -6,16 +6,75 @@ let dataRecords = [];
 let users = [];
 let messages = [];
 let autoNumber = 1;
+let isOnline = navigator.onLine;
+let syncInterval = null;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     initializeDatabase();
     setupEventListeners();
     updateStats();
+    setupRealTimeSync();
+    setupOnlineStatusListener();
 });
+
+// Real-time sync between devices
+function setupRealTimeSync() {
+    // Sync every 5 seconds
+    syncInterval = setInterval(function() {
+        if (isOnline) {
+            syncData();
+        }
+    }, 5000);
+}
+
+// Online/Offline status listener
+function setupOnlineStatusListener() {
+    window.addEventListener('online', function() {
+        isOnline = true;
+        showMessage('پەیوەندی ئینتەرنەت دەستی پێکرد', 'success');
+        syncData();
+    });
+    
+    window.addEventListener('offline', function() {
+        isOnline = false;
+        showMessage('پەیوەندی ئینتەرنەت کەوت', 'warning');
+    });
+}
+
+// Sync data between devices
+function syncData() {
+    try {
+        // Get latest data from localStorage
+        const latestUsers = JSON.parse(localStorage.getItem('users') || '[]');
+        const latestDataRecords = JSON.parse(localStorage.getItem('dataRecords') || '[]');
+        const latestMessages = JSON.parse(localStorage.getItem('messages') || '[]');
+        
+        // Update global variables
+        users = latestUsers;
+        dataRecords = latestDataRecords;
+        messages = latestMessages;
+        
+        // Update UI if user is logged in
+        if (currentUser) {
+            updateStats();
+            if (currentRole === 'admin') {
+                loadUsers();
+                loadData();
+            } else {
+                loadUserData();
+            }
+        }
+    } catch (e) {
+        console.error('Sync error:', e);
+    }
+}
 
 // Database Initialization
 function initializeDatabase() {
+    // Check if running on iOS/Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    
     // Initialize local storage if empty
     if (!localStorage.getItem('users')) {
         // Create default admin user
@@ -33,23 +92,63 @@ function initializeDatabase() {
         
         users = [defaultAdmin];
         localStorage.setItem('users', JSON.stringify(users));
+        
+        // For iOS, also store in sessionStorage as backup
+        if (isIOS) {
+            sessionStorage.setItem('users', JSON.stringify(users));
+        }
     } else {
-        users = JSON.parse(localStorage.getItem('users'));
+        try {
+            users = JSON.parse(localStorage.getItem('users'));
+        } catch (e) {
+            // Fallback to sessionStorage for iOS
+            if (isIOS && sessionStorage.getItem('users')) {
+                users = JSON.parse(sessionStorage.getItem('users'));
+            } else {
+                users = [];
+            }
+        }
     }
     
     if (!localStorage.getItem('dataRecords')) {
         dataRecords = [];
         localStorage.setItem('dataRecords', JSON.stringify(dataRecords));
+        
+        if (isIOS) {
+            sessionStorage.setItem('dataRecords', JSON.stringify(dataRecords));
+        }
     } else {
-        dataRecords = JSON.parse(localStorage.getItem('dataRecords'));
-        autoNumber = dataRecords.length > 0 ? Math.max(...dataRecords.map(r => r.id)) + 1 : 1;
+        try {
+            dataRecords = JSON.parse(localStorage.getItem('dataRecords'));
+            autoNumber = dataRecords.length > 0 ? Math.max(...dataRecords.map(r => r.id)) + 1 : 1;
+        } catch (e) {
+            if (isIOS && sessionStorage.getItem('dataRecords')) {
+                dataRecords = JSON.parse(sessionStorage.getItem('dataRecords'));
+                autoNumber = dataRecords.length > 0 ? Math.max(...dataRecords.map(r => r.id)) + 1 : 1;
+            } else {
+                dataRecords = [];
+                autoNumber = 1;
+            }
+        }
     }
     
     if (!localStorage.getItem('messages')) {
         messages = [];
         localStorage.setItem('messages', JSON.stringify(messages));
+        
+        if (isIOS) {
+            sessionStorage.setItem('messages', JSON.stringify(messages));
+        }
     } else {
-        messages = JSON.parse(localStorage.getItem('messages'));
+        try {
+            messages = JSON.parse(localStorage.getItem('messages'));
+        } catch (e) {
+            if (isIOS && sessionStorage.getItem('messages')) {
+                messages = JSON.parse(sessionStorage.getItem('messages'));
+            } else {
+                messages = [];
+            }
+        }
     }
 }
 
@@ -345,16 +444,20 @@ function handleDataEntry(e) {
         notes: notes,
         date: new Date().toISOString().split('T')[0],
         userId: currentUser.id,
-        userCommitteeName: currentUser.committeeName
+        userCommitteeName: currentUser.committeeName,
+        timestamp: new Date().toISOString()
     };
     
     dataRecords.push(newRecord);
     localStorage.setItem('dataRecords', JSON.stringify(dataRecords));
     
+    // Sync immediately for real-time update
+    syncData();
+    
     document.getElementById('dataEntryForm').reset();
     document.getElementById('committeeName').value = currentUser.committeeName;
     
-    showMessage('زانیاری بەسەرکەوتوویی تۆمارکرا', 'success');
+    showMessage('زانیاری بەسەرکەوتوویی تۆمارکرا - ئەدمین ڕاستەوخۆ دەیبینێت', 'success');
     updateUserStats();
 }
 
