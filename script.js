@@ -16,7 +16,26 @@ document.addEventListener('DOMContentLoaded', function() {
     updateStats();
     setupRealTimeSync();
     setupOnlineStatusListener();
+    updateClock();
+    setInterval(updateClock, 1000);
 });
+
+// Clock Function
+function updateClock() {
+    const now = new Date();
+    const options = { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Baghdad'
+    };
+    const timeString = now.toLocaleTimeString('ku-IQ', options);
+    const clockElement = document.getElementById('clock');
+    if (clockElement) {
+        clockElement.textContent = timeString;
+    }
+}
 
 // Real-time sync between devices
 function setupRealTimeSync() {
@@ -345,9 +364,18 @@ function handleUserCreation(e) {
     users.push(newUser);
     localStorage.setItem('users', JSON.stringify(users));
     
+    // For iOS, also store in sessionStorage
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    if (isIOS) {
+        sessionStorage.setItem('users', JSON.stringify(users));
+    }
+    
+    // Force sync across devices
+    syncData();
+    
     closeUserModal();
     loadUsers();
-    showMessage('یوزەر بەسەرکەوتوویی زیادکرا', 'success');
+    showMessage('یوزەر بەسەرکەوتوویی زیادکرا - ئێستا لە iPad دەتوانی چوونەژوورەوە', 'success');
 }
 
 function editUser(userId) {
@@ -384,9 +412,19 @@ function updateUser(userId) {
         };
         
         localStorage.setItem('users', JSON.stringify(users));
+        
+        // For iOS, also store in sessionStorage
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+        if (isIOS) {
+            sessionStorage.setItem('users', JSON.stringify(users));
+        }
+        
+        // Force sync across devices
+        syncData();
+        
         closeUserModal();
         loadUsers();
-        showMessage('یوزەر بەسەرکەوتوویی نوێکرایەوە', 'success');
+        showMessage('یوزەر بەسەرکەوتوویی نوێکرایەوە - ئێستا لە iPad کاردەکات', 'success');
         
         // Reset form handler
         document.getElementById('userForm').onsubmit = handleUserCreation;
@@ -397,8 +435,18 @@ function deleteUser(userId) {
     if (confirm('ئایا دڵنیایت لە سڕینەوەی ئەم یوزەرە؟')) {
         users = users.filter(u => u.id !== userId);
         localStorage.setItem('users', JSON.stringify(users));
+        
+        // For iOS, also store in sessionStorage
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+        if (isIOS) {
+            sessionStorage.setItem('users', JSON.stringify(users));
+        }
+        
+        // Force sync across devices
+        syncData();
+        
         loadUsers();
-        showMessage('یوزەر سڕایەوە', 'success');
+        showMessage('یوزەر سڕایەوە - لە iPad نابینرێت', 'success');
     }
 }
 
